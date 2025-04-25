@@ -3,13 +3,14 @@ package bot
 
 import (
 	"log"
-	"os"
+
+	app_config "tg-bot-food/internal/app_config"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func StartBot() {
-	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+func StartBot(appConfig app_config.AppConfig) {
+	botToken := appConfig.TelegramBotToken
 	if botToken == "" {
 		log.Fatal("TELEGRAM_BOT_TOKEN environment variable is not set")
 	}
