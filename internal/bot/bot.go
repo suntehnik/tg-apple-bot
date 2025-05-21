@@ -5,11 +5,12 @@ import (
 	"log"
 
 	app_config "tg-bot-food/internal/app_config"
+	"tg-bot-food/internal/scenarios"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func StartBot(appConfig app_config.AppConfig) {
+func StartBot(appConfig app_config.AppConfig, scenarioOrchestrator scenarios.ScenarioOrchestrator) {
 	botToken := appConfig.TelegramBotToken
 	if botToken == "" {
 		log.Fatal("TELEGRAM_BOT_TOKEN environment variable is not set")
@@ -31,8 +32,21 @@ func StartBot(appConfig app_config.AppConfig) {
 		if update.Message == nil {
 			continue
 		}
-
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Я помогу тебе правильно питаться.")
-		bot.Send(msg)
+		photoUrl := ""
+		if update.Message.Photo != nil {
+			fileID := update.Message.Photo[0].FileID
+			photoUrl, err = bot.GetFileDirectURL(fileID)
+			if err != nil {
+				log.Printf("Error getting file: %v", err)
+				continue
+			}
+		}
+		msg, err := scenarioOrchestrator.HandleMessage(update.Message.From.ID, update.Message.Text, photoUrl)
+		if err != nil {
+			log.Printf("Error handling message: %v", err)
+			continue
+		}
+		tgMsg := tgbotapi.NewMessage(update.Message.Chat.ID, msg)
+		bot.Send(tgMsg)
 	}
 }
