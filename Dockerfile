@@ -1,18 +1,16 @@
-# syntax=docker/dockerfile:1
-FROM golang:1.22-alpine AS builder
+FROM python:3.11-slim
 
 WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application files
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o bot ./src/tgbot/main.go
 
-FROM alpine:3.19
-WORKDIR /app
-COPY --from=builder /app/bot ./bot
-COPY --from=builder /app/README.md ./README.md
+# Create necessary directories
+RUN mkdir -p logs temp
 
-# Установить переменную окружения для токена бота (можно переопределить при запуске)
-ENV TELEGRAM_BOT_TOKEN=""
-
-CMD ["./bot"]
+# Run the bot
+CMD ["python", "app.py"]

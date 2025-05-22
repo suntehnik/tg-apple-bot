@@ -1,1 +1,52 @@
+# Secrets and credentials
 secrets/
+.env
+
+# IDE configurations
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+temp/
+.DS_Store
+*.tmp
+
+# Docker
+.dockerignore
+
+# Testing
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/

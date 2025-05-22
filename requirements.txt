@@ -1,0 +1,17 @@
+# Main dependencies
+aiogram
+firebase-admin
+openai
+python-dotenv
+pydantic
+loguru
+
+# Testing
+pytest==7.4.0
+
+# Optional for PubSub
+google-cloud-pubsub
+
+# Compatible with Python 3.10
+typing-extensions
+pydantic-core
