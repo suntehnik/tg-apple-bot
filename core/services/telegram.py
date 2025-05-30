@@ -7,6 +7,7 @@ from aiogram.filters import Command
 from loguru import logger
 
 from config.config import Config
+from core.localization import i18n
 
 
 class TelegramService:
@@ -106,19 +107,22 @@ class TelegramService:
         """
         user_id = message.from_user.id
         chat_id = message.chat.id
+        user_language = message.from_user.language_code
         
         if self._scenario_orchestrator:
             # Start registration scenario if user is new
             context = {
                 "telegram_user": message.from_user.model_dump(),
-                "chat_id": chat_id
+                "chat_id": chat_id,
+                "user_language": user_language
             }
             
             await self._scenario_orchestrator.start_scenario("registration", user_id, context)
         else:
-            welcome_text = (
+            welcome_text = i18n.gettext(
                 "👋 Добро пожаловать в бот для отслеживания питания!\n\n"
-                "Отправьте мне фотографию еды, и я помогу определить её калорийность и пищевую ценность."
+                "Отправьте мне фотографию еды, и я помогу определить её калорийность и пищевую ценность.",
+                user_language
             )
             await self.send_message(chat_id, welcome_text)
     
@@ -131,17 +135,19 @@ class TelegramService:
         """
         user_id = message.from_user.id
         chat_id = message.chat.id
+        user_language = message.from_user.language_code
         
         if self._scenario_orchestrator:
             # Start stats scenario
             context = {
                 "telegram_user": message.from_user.model_dump(),
-                "chat_id": chat_id
+                "chat_id": chat_id,
+                "user_language": user_language
             }
             
             await self._scenario_orchestrator.start_scenario("stats", user_id, context)
         else:
-            await self.send_message(chat_id, "Статистика временно недоступна.")
+            await self.send_message(chat_id, i18n.gettext("Статистика временно недоступна.", user_language))
     
     async def _handle_photo(self, message: Message):
         """
@@ -152,6 +158,7 @@ class TelegramService:
         """
         user_id = message.from_user.id
         chat_id = message.chat.id
+        user_language = message.from_user.language_code
         
         # Get the largest photo available
         photo = message.photo[-1]
@@ -172,12 +179,13 @@ class TelegramService:
             context = {
                 "telegram_user": message.from_user.model_dump(),
                 "chat_id": chat_id,
-                "photo_path": download_path
+                "photo_path": download_path,
+                "user_language": user_language
             }
             
             await self._scenario_orchestrator.start_scenario("meal_photo", user_id, context)
         else:
-            await self.send_message(chat_id, "Получил вашу фотографию, но анализ временно недоступен.")
+            await self.send_message(chat_id, i18n.gettext("Получил вашу фотографию, но анализ временно недоступен.", user_language))
     
     async def _handle_message(self, message: Message):
         """
@@ -189,17 +197,19 @@ class TelegramService:
         user_id = message.from_user.id
         chat_id = message.chat.id
         text = message.text
+        user_language = message.from_user.language_code
         
         if self._scenario_orchestrator:
             # Process message through active scenario if exists
             update_data = {
                 "message_type": "text",
-                "text": text
+                "text": text,
+                "user_language": user_language
             }
             
             await self._scenario_orchestrator.process_update(user_id, update_data)
         else:
             await self.send_message(
                 chat_id, 
-                "Отправьте мне фотографию еды, и я помогу определить её калорийность и пищевую ценность."
+                i18n.gettext("Отправьте мне фотографию еды, и я помогу определить её калорийность и пищевую ценность.", user_language)
             )

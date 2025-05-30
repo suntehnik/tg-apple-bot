@@ -4,6 +4,7 @@ from loguru import logger
 
 from scenarios.base import AbstractScenario
 from dto.meal import MealDTO
+from core.localization import i18n
 
 
 class MealPhotoScenario(AbstractScenario):
@@ -38,12 +39,13 @@ class MealPhotoScenario(AbstractScenario):
         telegram_user = context["telegram_user"]
         chat_id = context["chat_id"]
         photo_path = context["photo_path"]
+        user_language = context.get("user_language")
         
         # Check if photo exists
         if not os.path.exists(photo_path):
             await self.telegram_service.send_message(
                 chat_id,
-                "Произошла ошибка при обработке фотографии. Пожалуйста, попробуйте снова."
+                i18n.gettext("Произошла ошибка при обработке фотографии. Пожалуйста, попробуйте снова.", user_language)
             )
             
             context["completed"] = True
@@ -53,7 +55,7 @@ class MealPhotoScenario(AbstractScenario):
         # Send processing message
         await self.telegram_service.send_message(
             chat_id,
-            "🔍 Анализирую вашу фотографию еды... Это может занять несколько секунд."
+            i18n.gettext("🔍 Анализирую вашу фотографию еды... Это может занять несколько секунд.", user_language)
         )
         
         # Analyze the image
@@ -64,8 +66,12 @@ class MealPhotoScenario(AbstractScenario):
             error_message = analysis_result.get("error", "Неизвестная ошибка")
             await self.telegram_service.send_message(
                 chat_id,
-                f"Не удалось проанализировать изображение: {error_message}\n"
-                "Пожалуйста, попробуйте другую фотографию с более четким изображением еды."
+                i18n.gettext(
+                    "Не удалось проанализировать изображение: %error_message%\n"
+                    "Пожалуйста, попробуйте другую фотографию с более четким изображением еды.",
+                    user_language,
+                    {"error_message": error_message}
+                )
             )
             
             context["completed"] = True
@@ -96,22 +102,27 @@ class MealPhotoScenario(AbstractScenario):
         
         context["meal"] = meal.model_dump()
         
-        # Send analysis results
-        result_message = (
-            f"✅ Результаты анализа:\n\n"
-            f"🍽 <b>{food_name}</b>\n\n"
-            f"🔥 Калории: <b>{calories} ккал</b>\n"
-            f"🥩 Белки: <b>{proteins} г</b>\n"
-            f"🧈 Жиры: <b>{fats} г</b>\n"
-            f"🍚 Углеводы: <b>{carbs} г</b>\n\n"
-            f"Выберите тип приема пищи:\n"
-            f"1. Завтрак\n"
-            f"2. Обед\n"
-            f"3. Ужин\n"
-            f"4. Перекус (по умолчанию)\n\n"
-            f"Отправьте номер или название типа приема пищи."
-        )
+        # Send analysis results - using localized strings
+        result_message_parts = [
+            i18n.gettext("✅ Результаты анализа:", user_language),
+            "",
+            f"🍽 <b>{food_name}</b>",
+            "",
+            i18n.gettext("🔥 Калории: %calories% ккал", user_language, {"calories": calories}),
+            i18n.gettext("🥩 Белки: %proteins% г", user_language, {"proteins": proteins}),
+            i18n.gettext("🧈 Жиры: %fats% г", user_language, {"fats": fats}),
+            i18n.gettext("🍚 Углеводы: %carbs% г", user_language, {"carbs": carbs}),
+            "",
+            i18n.gettext("Выберите тип приема пищи:", user_language),
+            i18n.gettext("1. Завтрак", user_language),
+            i18n.gettext("2. Обед", user_language),
+            i18n.gettext("3. Ужин", user_language),
+            i18n.gettext("4. Перекус (по умолчанию)", user_language),
+            "",
+            i18n.gettext("Отправьте номер или название типа приема пищи.", user_language)
+        ]
         
+        result_message = "\n".join(result_message_parts)
         await self.telegram_service.send_message(chat_id, result_message)
         
         return context
@@ -131,6 +142,7 @@ class MealPhotoScenario(AbstractScenario):
         telegram_user = context["telegram_user"]
         chat_id = context["chat_id"]
         step = context.get("step", "confirm")
+        user_language = context.get("user_language") or input_data.get("user_language")
         
         if step == "confirm":
             # Process meal type selection
@@ -139,13 +151,13 @@ class MealPhotoScenario(AbstractScenario):
                 meal_type = "snack"  # Default
                 
                 # Determine meal type from input
-                if text in ["1", "завтрак"]:
+                if text in ["1", i18n.gettext("завтрак", user_language).lower()]:
                     meal_type = "breakfast"
-                elif text in ["2", "обед"]:
+                elif text in ["2", i18n.gettext("обед", user_language).lower()]:
                     meal_type = "lunch"
-                elif text in ["3", "ужин"]:
+                elif text in ["3", i18n.gettext("ужин", user_language).lower()]:
                     meal_type = "dinner"
-                elif text in ["4", "перекус"]:
+                elif text in ["4", i18n.gettext("перекус", user_language).lower()]:
                     meal_type = "snack"
                 
                 # Update meal type
@@ -160,25 +172,29 @@ class MealPhotoScenario(AbstractScenario):
                 context["step"] = "completed"
                 context["completed"] = True
                 
-                # Send confirmation message
+                # Send confirmation message  
                 meal_type_names = {
-                    "breakfast": "Завтрак",
-                    "lunch": "Обед",
-                    "dinner": "Ужин",
-                    "snack": "Перекус"
+                    "breakfast": i18n.gettext("Завтрак", user_language),
+                    "lunch": i18n.gettext("Обед", user_language),
+                    "dinner": i18n.gettext("Ужин", user_language),
+                    "snack": i18n.gettext("Перекус", user_language)
                 }
                 
-                meal_type_name = meal_type_names.get(meal_type, "Прием пищи")
+                meal_type_name = meal_type_names.get(meal_type, i18n.gettext("Прием пищи", user_language))
                 
-                confirmation_message = (
-                    f"✅ {meal_type_name} успешно добавлен!\n\n"
-                    f"🍽 <b>{meal.food_name}</b>\n"
-                    f"🔥 Калории: <b>{meal.calories} ккал</b>\n"
-                    f"🥩 Белки: <b>{meal.proteins} г</b>\n"
-                    f"🧈 Жиры: <b>{meal.fats} г</b>\n"
-                    f"🍚 Углеводы: <b>{meal.carbs} г</b>\n\n"
-                    f"Отправьте мне еще одну фотографию еды для анализа."
-                )
+                confirmation_parts = [
+                    i18n.gettext("✅ %meal_type% успешно добавлен!", user_language, {"meal_type": meal_type_name}),
+                    "",
+                    f"🍽 <b>{meal.food_name}</b>",
+                    i18n.gettext("🔥 Калории: %calories% ккал", user_language, {"calories": meal.calories}),
+                    i18n.gettext("🥩 Белки: %proteins% г", user_language, {"proteins": meal.proteins}),
+                    i18n.gettext("🧈 Жиры: %fats% г", user_language, {"fats": meal.fats}),
+                    i18n.gettext("🍚 Углеводы: %carbs% г", user_language, {"carbs": meal.carbs}),
+                    "",
+                    i18n.gettext("Отправьте мне еще одну фотографию еды для анализа.", user_language)
+                ]
+                
+                confirmation_message = "\n".join(confirmation_parts)
                 
                 await self.telegram_service.send_message(chat_id, confirmation_message)
                 
@@ -191,7 +207,7 @@ class MealPhotoScenario(AbstractScenario):
                 # Invalid input
                 await self.telegram_service.send_message(
                     chat_id,
-                    "Пожалуйста, выберите тип приема пищи, отправив номер от 1 до 4."
+                    i18n.gettext("Пожалуйста, выберите тип приема пищи, отправив номер от 1 до 4.", user_language)
                 )
         
         return context
@@ -207,10 +223,11 @@ class MealPhotoScenario(AbstractScenario):
             Dict[str, Any]: Final context after cancellation
         """
         chat_id = context["chat_id"]
+        user_language = context.get("user_language")
         
         await self.telegram_service.send_message(
             chat_id,
-            "❌ Добавление приема пищи отменено."
+            i18n.gettext("❌ Добавление приема пищи отменено.", user_language)
         )
         
         # Clean up temporary photo file

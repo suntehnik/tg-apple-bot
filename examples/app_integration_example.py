@@ -1,9 +1,13 @@
+"""
+Example of integrating the localization service in the main application.
+"""
 import os
 import asyncio
 from loguru import logger
 
 from config.config_manager import ConfigManager
 from core.logging.logger import Logger
+from core.localization import init
 from core.services.telegram import TelegramService
 from core.services.firestore import FirestoreService
 from core.services.openai import OpenAIService
@@ -13,10 +17,10 @@ from scenarios.meal.meal_photo import MealPhotoScenario
 from services.user_service import UserService
 from services.meal_service import MealService
 from services.food_analysis import FoodAnalysisService
-from core.localization import i18n
+
 
 async def setup_app():
-    """Set up and initialize the application."""
+    """Set up and initialize the application with localization."""
     # Create necessary directories
     os.makedirs("logs", exist_ok=True)
     os.makedirs("temp", exist_ok=True)
@@ -29,7 +33,9 @@ async def setup_app():
     Logger.setup(config.log_level)
     logger.info("Starting Food Tracking Bot...")
     
-    i18n.init(default_language="it")
+    # Initialize localization
+    init()  # Load locales from default directory
+    logger.info("Localization service initialized")
     
     # Initialize services
     telegram_service = TelegramService(config)
@@ -74,4 +80,7 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # This is just an example and would not be executed
+    # Just showing how to integrate localization into the main app
+    print("This is an example of how to integrate localization into the main app.")
+    print("In a real application, you would run: asyncio.run(main())")

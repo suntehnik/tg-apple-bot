@@ -3,6 +3,7 @@ from loguru import logger
 
 from scenarios.base import AbstractScenario
 from dto.profile import UserProfileDTO
+from core.localization import i18n
 
 
 class RegistrationScenario(AbstractScenario):
@@ -34,16 +35,19 @@ class RegistrationScenario(AbstractScenario):
         # Get data from context
         telegram_user = context["telegram_user"]
         chat_id = context["chat_id"]
+        user_language = context.get("user_language")
         
         # Check if user is already registered
         existing_user = self.user_service.get_user(telegram_user["id"])
         
         if existing_user:
             # User already exists
-            await self.telegram_service.send_message(
-                chat_id,
-                f"Добро пожаловать обратно, {telegram_user['first_name']}! Я готов помочь вам с анализом питания."
+            welcome_back_msg = i18n.gettext(
+                "Добро пожаловать обратно, %name%! Я готов помочь вам с анализом питания.",
+                user_language,
+                {"name": telegram_user['first_name']}
             )
+            await self.telegram_service.send_message(chat_id, welcome_back_msg)
             
             # Set scenario as completed
             context["completed"] = True
@@ -68,13 +72,16 @@ class RegistrationScenario(AbstractScenario):
         context["completed"] = False
         
         # Send welcome message
-        welcome_message = (
-            f"👋 Добро пожаловать, {telegram_user['first_name']}!\n\n"
-            "Я бот для анализа питания. Отправьте мне фотографию еды, "
-            "и я помогу определить её калорийность и пищевую ценность.\n\n"
-            "Вы можете использовать следующие команды:\n"
-            "/stats - Посмотреть статистику вашего питания"
-        )
+        welcome_parts = [
+            i18n.gettext("👋 Добро пожаловать, %name%!", user_language, {"name": telegram_user['first_name']}),
+            "",
+            i18n.gettext("Я бот для анализа питания. Отправьте мне фотографию еды, и я помогу определить её калорийность и пищевую ценность.", user_language),
+            "",
+            i18n.gettext("Вы можете использовать следующие команды:", user_language),
+            i18n.gettext("/stats - Посмотреть статистику вашего питания", user_language)
+        ]
+        
+        welcome_message = "\n".join(welcome_parts)
         
         await self.telegram_service.send_message(chat_id, welcome_message)
         
@@ -117,10 +124,11 @@ class RegistrationScenario(AbstractScenario):
             Dict[str, Any]: Final context after cancellation
         """
         chat_id = context["chat_id"]
+        user_language = context.get("user_language")
         
         await self.telegram_service.send_message(
             chat_id,
-            "Регистрация отменена. Вы можете начать снова, отправив команду /start."
+            i18n.gettext("Регистрация отменена. Вы можете начать снова, отправив команду /start.", user_language)
         )
         
         context["completed"] = True
