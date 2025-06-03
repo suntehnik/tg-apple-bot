@@ -40,12 +40,14 @@ class MealPhotoScenario(AbstractScenario):
         chat_id = context["chat_id"]
         photo_path = context["photo_path"]
         user_language = context.get("user_language")
+        reply_to_message_id = context.get("reply_to_message_id")
         
         # Check if photo exists
         if not os.path.exists(photo_path):
             await self.telegram_service.send_message(
                 chat_id,
-                i18n.gettext("Произошла ошибка при обработке фотографии. Пожалуйста, попробуйте снова.", user_language)
+                i18n.gettext("Произошла ошибка при обработке фотографии. Пожалуйста, попробуйте снова.", user_language),
+                reply_to_message_id=reply_to_message_id
             )
             
             context["completed"] = True
@@ -55,7 +57,8 @@ class MealPhotoScenario(AbstractScenario):
         # Send processing message
         await self.telegram_service.send_message(
             chat_id,
-            i18n.gettext("🔍 Анализирую вашу фотографию еды... Это может занять несколько секунд.", user_language)
+            i18n.gettext("🔍 Анализирую вашу фотографию еды... Это может занять несколько секунд.", user_language),
+            reply_to_message_id=reply_to_message_id
         )
         
         # Analyze the image
@@ -71,7 +74,8 @@ class MealPhotoScenario(AbstractScenario):
                     "Пожалуйста, попробуйте другую фотографию с более четким изображением еды.",
                     user_language,
                     {"error_message": error_message}
-                )
+                ),
+                reply_to_message_id=reply_to_message_id
             )
             
             context["completed"] = True
@@ -123,7 +127,7 @@ class MealPhotoScenario(AbstractScenario):
         ]
         
         result_message = "\n".join(result_message_parts)
-        await self.telegram_service.send_message(chat_id, result_message)
+        await self.telegram_service.send_message(chat_id, result_message, reply_to_message_id=reply_to_message_id)
         
         return context
     
@@ -143,6 +147,7 @@ class MealPhotoScenario(AbstractScenario):
         chat_id = context["chat_id"]
         step = context.get("step", "confirm")
         user_language = context.get("user_language") or input_data.get("user_language")
+        reply_to_message_id = input_data.get("reply_to_message_id")
         
         if step == "confirm":
             # Process meal type selection
@@ -196,7 +201,7 @@ class MealPhotoScenario(AbstractScenario):
                 
                 confirmation_message = "\n".join(confirmation_parts)
                 
-                await self.telegram_service.send_message(chat_id, confirmation_message)
+                await self.telegram_service.send_message(chat_id, confirmation_message, reply_to_message_id=reply_to_message_id)
                 
                 # Clean up temporary photo file
                 if "photo_path" in context and os.path.exists(context["photo_path"]):
@@ -207,7 +212,8 @@ class MealPhotoScenario(AbstractScenario):
                 # Invalid input
                 await self.telegram_service.send_message(
                     chat_id,
-                    i18n.gettext("Пожалуйста, выберите тип приема пищи, отправив номер от 1 до 4.", user_language)
+                    i18n.gettext("Пожалуйста, выберите тип приема пищи, отправив номер от 1 до 4.", user_language),
+                    reply_to_message_id=reply_to_message_id
                 )
         
         return context
@@ -227,7 +233,8 @@ class MealPhotoScenario(AbstractScenario):
         
         await self.telegram_service.send_message(
             chat_id,
-            i18n.gettext("❌ Добавление приема пищи отменено.", user_language)
+            i18n.gettext("❌ Добавление приема пищи отменено.", user_language),
+            reply_to_message_id=context.get("reply_to_message_id")
         )
         
         # Clean up temporary photo file

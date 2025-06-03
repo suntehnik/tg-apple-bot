@@ -69,7 +69,7 @@ class TelegramService:
         await self.bot.set_webhook(url=webhook_url + webhook_path)
         logger.info(f"Webhook set up at {webhook_url + webhook_path}")
     
-    async def send_message(self, chat_id: int, text: str, parse_mode: Optional[str] = ParseMode.HTML):
+    async def send_message(self, chat_id: int, text: str, parse_mode: Optional[str] = ParseMode.HTML, reply_to_message_id: Optional[int] = None):
         """
         Send a text message to a chat.
         
@@ -77,8 +77,9 @@ class TelegramService:
             chat_id (int): Telegram chat ID
             text (str): Message text
             parse_mode (Optional[str]): Message parse mode
+            reply_to_message_id (Optional[int]): Message ID to reply to
         """
-        await self.bot.send_message(chat_id=chat_id, text=text, parse_mode=parse_mode)
+        await self.bot.send_message(chat_id=chat_id, text=text, parse_mode=parse_mode, reply_to_message_id=reply_to_message_id)
         logger.debug(f"Message sent to chat_id: {chat_id}")
     
     async def send_photo(self, chat_id: int, photo_path: str, caption: Optional[str] = None):
@@ -114,7 +115,8 @@ class TelegramService:
             context = {
                 "telegram_user": message.from_user.model_dump(),
                 "chat_id": chat_id,
-                "user_language": user_language
+                "user_language": user_language,
+                "reply_to_message_id": message.message_id
             }
             
             await self._scenario_orchestrator.start_scenario("registration", user_id, context)
@@ -124,7 +126,7 @@ class TelegramService:
                 "Отправьте мне фотографию еды, и я помогу определить её калорийность и пищевую ценность.",
                 user_language
             )
-            await self.send_message(chat_id, welcome_text)
+            await self.send_message(chat_id, welcome_text, reply_to_message_id=message.message_id)
     
     async def _handle_stats(self, message: Message):
         """
@@ -142,12 +144,13 @@ class TelegramService:
             context = {
                 "telegram_user": message.from_user.model_dump(),
                 "chat_id": chat_id,
-                "user_language": user_language
+                "user_language": user_language,
+                "reply_to_message_id": message.message_id
             }
             
             await self._scenario_orchestrator.start_scenario("stats", user_id, context)
         else:
-            await self.send_message(chat_id, i18n.gettext("Статистика временно недоступна.", user_language))
+            await self.send_message(chat_id, i18n.gettext("Статистика временно недоступна.", user_language), reply_to_message_id=message.message_id)
     
     async def _handle_photo(self, message: Message):
         """
@@ -180,12 +183,13 @@ class TelegramService:
                 "telegram_user": message.from_user.model_dump(),
                 "chat_id": chat_id,
                 "photo_path": download_path,
-                "user_language": user_language
+                "user_language": user_language,
+                "reply_to_message_id": message.message_id
             }
             
             await self._scenario_orchestrator.start_scenario("meal_photo", user_id, context)
         else:
-            await self.send_message(chat_id, i18n.gettext("Получил вашу фотографию, но анализ временно недоступен.", user_language))
+            await self.send_message(chat_id, i18n.gettext("Получил вашу фотографию, но анализ временно недоступен.", user_language), reply_to_message_id=message.message_id)
     
     async def _handle_message(self, message: Message):
         """
@@ -204,12 +208,14 @@ class TelegramService:
             update_data = {
                 "message_type": "text",
                 "text": text,
-                "user_language": user_language
+                "user_language": user_language,
+                "reply_to_message_id": message.message_id
             }
             
             await self._scenario_orchestrator.process_update(user_id, update_data)
         else:
             await self.send_message(
                 chat_id, 
-                i18n.gettext("Отправьте мне фотографию еды, и я помогу определить её калорийность и пищевую ценность.", user_language)
+                i18n.gettext("Отправьте мне фотографию еды, и я помогу определить её калорийность и пищевую ценность.", user_language),
+                reply_to_message_id=message.message_id
             )

@@ -36,6 +36,7 @@ class RegistrationScenario(AbstractScenario):
         telegram_user = context["telegram_user"]
         chat_id = context["chat_id"]
         user_language = context.get("user_language")
+        reply_to_message_id = context.get("reply_to_message_id")
         
         # Check if user is already registered
         existing_user = self.user_service.get_user(telegram_user["id"])
@@ -47,7 +48,7 @@ class RegistrationScenario(AbstractScenario):
                 user_language,
                 {"name": telegram_user['first_name']}
             )
-            await self.telegram_service.send_message(chat_id, welcome_back_msg)
+            await self.telegram_service.send_message(chat_id, welcome_back_msg, reply_to_message_id=reply_to_message_id)
             
             # Set scenario as completed
             context["completed"] = True
@@ -83,7 +84,7 @@ class RegistrationScenario(AbstractScenario):
         
         welcome_message = "\n".join(welcome_parts)
         
-        await self.telegram_service.send_message(chat_id, welcome_message)
+        await self.telegram_service.send_message(chat_id, welcome_message, reply_to_message_id=reply_to_message_id)
         
         # Mark scenario as completed
         context["completed"] = True
@@ -128,7 +129,8 @@ class RegistrationScenario(AbstractScenario):
         
         await self.telegram_service.send_message(
             chat_id,
-            i18n.gettext("Регистрация отменена. Вы можете начать снова, отправив команду /start.", user_language)
+            i18n.gettext("Регистрация отменена. Вы можете начать снова, отправив команду /start.", user_language),
+            reply_to_message_id=context.get("reply_to_message_id")
         )
         
         context["completed"] = True

@@ -65,5 +65,9 @@
   "Я бот для анализа питания. Отправьте мне фотографию еды, и я помогу определить её калорийность и пищевую ценность.": "I'm a nutrition analysis bot. Send me a food photo, and I'll help determine its calories and nutritional value.",
   "Вы можете использовать следующие команды:": "You can use the following commands:",
   "/stats - Посмотреть статистику вашего питания": "/stats - View your nutrition statistics",
-  "Регистрация отменена. Вы можете начать снова, отправив команду /start.": "Registration cancelled. You can start again by sending the /start command."
+  "Регистрация отменена. Вы можете начать снова, отправив команду /start.": "Registration cancelled. You can start again by sending the /start command.",
+  
+  "# Stats messages": "",
+  "📊 Статистика временно недоступна.\n\nВ будущих версиях здесь будет отображаться ваша статистика питания.": "📊 Statistics are temporarily unavailable.\n\nIn future versions, your nutrition statistics will be displayed here.",
+  "Просмотр статистики отменён.": "Statistics viewing cancelled."
 }

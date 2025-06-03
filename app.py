@@ -10,6 +10,7 @@ from core.services.openai import OpenAIService
 from scenarios.orchestrator import ScenarioOrchestrator
 from scenarios.registration.registration import RegistrationScenario
 from scenarios.meal.meal_photo import MealPhotoScenario
+from scenarios.stats.stats import StatsScenario
 from services.user_service import UserService
 from services.meal_service import MealService
 from services.food_analysis import FoodAnalysisService
@@ -47,9 +48,11 @@ async def setup_app():
     # Register scenarios
     registration_scenario = RegistrationScenario(user_service, telegram_service)
     meal_photo_scenario = MealPhotoScenario(food_analysis_service, meal_service, telegram_service)
+    stats_scenario = StatsScenario(meal_service, telegram_service)
     
     orchestrator.register_scenario("registration", registration_scenario)
     orchestrator.register_scenario("meal_photo", meal_photo_scenario)
+    orchestrator.register_scenario("stats", stats_scenario)
     
     # Set orchestrator in telegram service
     telegram_service.set_orchestrator(orchestrator)
