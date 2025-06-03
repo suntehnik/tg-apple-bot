@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  tg-bot-food:
+    image: tg-bot-food:prod
+    container_name: tg-bot-food-prod
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Mount secrets directory for Firebase credentials
+      - ./secrets:/app/secrets:ro
+      # Persistent storage for logs and temp files
+      - ./logs:/app/logs
+      - ./temp:/app/temp
+    networks:
+      - bot-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import app; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+networks:
+  bot-network:
+    driver: bridge
