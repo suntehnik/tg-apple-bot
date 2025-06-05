@@ -5,13 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch bot",
-            "type": "go",
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
             "request": "launch",
-            "mode": "debug",
-            "envFile": "${workspaceFolder}/secrets/env",
-            "program": "${workspaceFolder}/src/tgbot/main.go",
-            "workingDir": "${workspaceFolder}"
-    }
+            "program": "${workspaceFolder}/app.py",
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/.env"
+        }
     ]
 }
